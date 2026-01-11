@@ -1,0 +1,92 @@
+---
+- name: Preparar nodos base para OpenStack (entorno mixto)
+  hosts: openstack
+  become: true
+
+  vars:
+    base_packages:
+      - python3
+      - python3-pip
+      - python3-venv
+      - curl
+      - vim
+      - git
+      - chrony
+      - ca-certificates
+      - apt-transport-https
+
+    docker_packages:
+      - docker.io
+
+  tasks:
+
+    - name: Validar sistema operativo soportado
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Ubuntu"
+          - ansible_distribution_version is version('22.04', '>=')
+        fail_msg: "Este playbook solo soporta Ubuntu 22.04+"
+
+    - name: Actualizar índice de paquetes
+      apt:
+        update_cache: yes
+
+    - name: Instalar paquetes base
+      apt:
+        name: "{{ base_packages }}"
+        state: present
+
+    - name: Instalar Docker
+      apt:
+        name: "{{ docker_packages }}"
+        state: present
+
+    - name: Habilitar y arrancar Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Habilitar Chrony
+      service:
+        name: chrony
+        state: started
+        enabled: true
+
+    - name: Desactivar swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Asegurar que swap no se reactive
+      replace:
+        path: /etc/fstab
+        regexp: '(^.*swap.*$)'
+        replace: '# \1'
+
+    - name: Ajustes de kernel para nodos compute
+      when: "'compute' in group_names"
+      block:
+        - name: Cargar módulos necesarios
+          modprobe:
+            name: br_netfilter
+            state: present
+
+        - name: Habilitar sysctl para networking
+          sysctl:
+            name: "{{ item.key }}"
+            value: "{{ item.value }}"
+            state: present
+            reload: yes
+          loop:
+            - { key: net.bridge.bridge-nf-call-iptables, value: 1 }
+            - { key: net.ipv4.ip_forward, value: 1 }
+
+    - name: Preparación básica de storage nodes
+      when: "'storage' in group_names"
+      block:
+        - name: Instalar utilidades de disco
+          apt:
+            name:
+              - lvm2
+              - xfsprogs
+            state: present
