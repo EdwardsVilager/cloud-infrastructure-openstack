@@ -102,3 +102,12 @@ Logical view:
 ```
 
 Este modelo permite el escalamiento horizontal del cómputo y el almacenamiento sin afectar el plano de control.
+
+## 5. Networking Overview
+
+El entorno se despliega inicialmente en un laboratorio basado en máquinas virtuales.
+A pesar de ello, se mantiene separación lógica de redes para facilitar una futura migración a infraestructura física sin cambios de arquitectura.
+
+## 6. OpenStack Release
+
+La plataforma se despliega usando OpenStack Bobcat (2023.2), priorizando estabilidad y compatibilidad con Kolla-Ansible.
