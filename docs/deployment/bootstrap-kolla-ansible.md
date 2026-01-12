@@ -308,6 +308,14 @@ all nodes: ok
 
 ---
 
+## 10. Prepare Nodes
+
+Ejecutar prepare nodes
+
+```bash
+ansible-playbook -i ansible/openstack/inventory/hosts.ini ansible/playbooks/prepare-nodes.yml
+```
+
 ## Estado del Paso
 
 - ✔ Entorno Python preparado

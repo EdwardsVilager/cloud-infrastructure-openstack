@@ -1,6 +1,6 @@
 ---
 - name: Preparar nodos base para OpenStack (entorno mixto)
-  hosts: openstack
+  hosts: all
   become: true
 
   vars:
@@ -17,6 +17,8 @@
 
     docker_packages:
       - docker.io
+
+    ntp_server: "50.50.1.20"  # ctrl01
 
   tasks:
 
@@ -35,6 +37,11 @@
       apt:
         name: "{{ base_packages }}"
         state: present
+
+    - name: Instalar Docker SDK para Python (pip)
+      pip:
+        name: docker
+        executable: pip3
 
     - name: Instalar Docker
       apt:
@@ -90,3 +97,67 @@
               - lvm2
               - xfsprogs
             state: present
+
+    - name: Configurar zona horaria y sincronización NTP (Colombia)
+      block:
+
+        - name: Establecer zona horaria a America/Bogota
+          ansible.builtin.command: timedatectl set-timezone America/Bogota
+
+# -------------------------------
+# Configuración NTP según rol
+# -------------------------------
+
+        - name: Configurar ctrl01 como servidor NTP
+          block:
+            - name: Asegurar que chrony esté instalado
+              apt:
+                name: chrony
+                state: present
+
+            - name: Configurar ctrl01 para permitir clientes de la red
+              blockinfile:
+                path: /etc/chrony/chrony.conf
+                block: |
+                  allow 50.50.1.0/24
+                  local stratum 10
+
+            - name: Reiniciar chrony en ctrl01
+              service:
+                name: chrony
+                state: restarted
+                enabled: true
+          when: inventory_hostname == "ctrl01"
+
+        - name: Configurar nodos clientes para apuntar a ctrl01
+          block:
+            - name: Asegurar que chrony esté instalado
+              apt:
+                name: chrony
+                state: present
+
+            - name: Apuntar chrony al servidor ctrl01
+              lineinfile:
+                path: /etc/chrony/chrony.conf
+                regexp: '^server'
+                line: "server {{ ntp_server }} iburst"
+                create: yes
+
+            - name: Reiniciar chrony en clientes
+              service:
+                name: chrony
+                state: restarted
+                enabled: true
+          when: inventory_hostname != "ctrl01"
+
+        - name: Forzar sincronización inicial del reloj con Chrony
+          ansible.builtin.command: chronyc -a makestep
+
+        - name: Verificar sincronización del reloj
+          ansible.builtin.command: timedatectl status
+          register: timedatectl_status
+          changed_when: false
+
+        - name: Mostrar estado de la hora del sistema
+          ansible.builtin.debug:
+            msg: "{{ timedatectl_status.stdout_lines }}"

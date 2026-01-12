@@ -58,6 +58,21 @@ Debe corresponder a **OpenStack Bobcat**.
 ## 2️⃣ Instalación de dependencias
 
 ```bash
+git ls-remote --heads https://opendev.org/openstack/ansible-collection-kolla
+sudo vim ~/.local/share/kolla-ansible/requirements.yml
+```
+
+Cambiar por disponibles:
+
+```text
+- src: https://opendev.org/openstack/ansible-collection-kolla
+  version: stable/2024.2   # <-- cambiar aquí
+  type: git
+```
+
+Instalar:
+
+```bash
 kolla-ansible install-deps
 ```
 

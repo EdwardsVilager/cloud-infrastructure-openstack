@@ -11,6 +11,7 @@
 kolla_base_distro: "ubuntu"
 kolla_install_type: "source"
 openstack_release: "2023.2"
+kolla_ansible_branch: stable/2024.2
 
 # ------------------------------------------------
 # HIGH AVAILABILITY
@@ -78,6 +79,19 @@ enable_tls_external: "no"
 enable_fluentd: "no"
 
 # ------------------------------------------------
-# NOVA
+# NOVA (LAB CONFIG)
 # ------------------------------------------------
 nova_compute_virt_type: "kvm"
+
+# Deshabilitar servicios de proxies y serial para laboratorio
+enable_nova_novncproxy: "no"
+enable_nova_spicehtml5proxy: "no"
+enable_nova_serialproxy: "no"
+enable_nova_conductor: "yes"    # conductor sí habilitado
+enable_nova_compute_ironic: "no"
+enable_ironic_neutron_agent: "no"
+
+enable_neutron_bgp_dragent: "no"
+enable_neutron_infoblox_ipam_agent: "no"
+enable_neutron_metering: "no"
+neutron_enable_ovn_agent: false

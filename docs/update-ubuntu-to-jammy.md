@@ -68,3 +68,14 @@ Reiniciar el nodo:
 ```bash
 sudo reboot
 ```
+
+Agregr nuevamente repos
+
+Modificar /etc/apt/sources.list:
+
+```bash
+deb https://repository.devops.in.idemia.com/ubuntu/fr.archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse
+deb https://repository.devops.in.idemia.com/ubuntu/fr.archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://repository.devops.in.idemia.com/ubuntu/fr.archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse
+deb https://repository.devops.in.idemia.com/ubuntu/fr.archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+```
