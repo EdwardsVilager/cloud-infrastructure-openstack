@@ -34,7 +34,7 @@ Todos los comandos de este documento se ejecutan **desde el nodo de despliegue**
 ### 1.1 Activar entorno virtual (si aplica)
 
 ```bash
-source ~/kolla-venv/bin/activate
+source ~/kolla-venv19/bin/activate
 ```
 
 Verificar:
@@ -66,7 +66,7 @@ Cambiar por disponibles:
 
 ```text
 - src: https://opendev.org/openstack/ansible-collection-kolla
-  version: stable/2024.2   # <-- cambiar aquí
+  version: stable/2025.2   # <-- cambiar aquí
   type: git
 ```
 
@@ -92,6 +92,7 @@ Este paso prepara **TODOS los nodos** (control y compute):
 
 ```bash
 kolla-ansible bootstrap-servers -i ansible/openstack/inventory/hosts.ini
+kolla-ansible bootstrap-servers -i ansible/openstack/inventory/hosts.ini -e @/etc/kolla/globals.yml
 ```
 
 ### ¿Qué hace este paso?
@@ -134,6 +135,7 @@ Este es el paso **más importante** antes del deploy:
 
 ```bash
 kolla-ansible prechecks -i ansible/openstack/inventory/hosts.ini
+kolla-ansible prechecks -i ansible/openstack/inventory/hosts.ini -e @/etc/kolla/globals.yml
 ```
 
 ---
@@ -168,7 +170,6 @@ kolla-ansible prechecks -i ansible/openstack/inventory/hosts.ini
 
 - VG `cinder-volumes` presente en compute nodes
 
-
 ---
 
 ## 7️⃣ Validación de configuración básica
@@ -188,7 +189,7 @@ En `/etc/kolla/globals.yml` deben existir al menos las siguientes líneas:
 
 ```yaml
 kolla_base_distro: "ubuntu"
-openstack_release: "bobcat"
+openstack_release: "2025.2"
 ```
 
 ---
@@ -232,8 +233,26 @@ sudo vi /etc/kolla/globals.yml
 📌 Después de cualquier cambio en este archivo, **siempre se deben ejecutar nuevamente los `prechecks`**.
 
 ---
+8️⃣ Generar configuración de servicios (genconfig)
 
-## 7️⃣ Validación específica de LVM (Cinder)
+Este paso toma tu globals.yml y genera todos los archivos de configuración necesarios para los servicios de OpenStack en /etc/kolla.
+
+```bash
+kolla-ansible genconfig -i ansible/openstack/inventory/hosts.ini
+kolla-ansible genconfig -i ansible/openstack/inventory/hosts.ini -e @/etc/kolla/globals.yml
+```
+
+Qué hace genconfig:
+
+Crea directorios `/etc/kolla/*` para cada servicio
+Genera archivos `config.json`, `haproxy.conf` y `service-override.yml`
+Prepara los contenedores de Kolla-Ansible para ser desplegados
+
+📌 Este paso siempre debe ejecutarse después de `prechecks` y antes de `deploy`.
+
+---
+
+## 9️⃣ Validación específica de LVM (Cinder)
 
 En cada compute node:
 
@@ -251,7 +270,7 @@ cinder-volumes   1   0   0   20g
 
 ---
 
-## 8️⃣ Validación de VIPs
+## 🔟 Validación de VIPs
 
 Verificar que las IPs:
 
@@ -272,7 +291,7 @@ Destination Host Unreachable
 
 ---
 
-## 9️⃣ Errores comunes y resolución
+## 1️⃣1️⃣ Errores comunes y resolución
 
 ### ❌ Error: interface not found
 

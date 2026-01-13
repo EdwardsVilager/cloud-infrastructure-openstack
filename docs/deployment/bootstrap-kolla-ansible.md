@@ -1,6 +1,6 @@
 # Bootstrap de Kolla-Ansible
 
-Este documento describe el proceso completo de **bootstrap del entorno de despliegue de OpenStack** utilizando **Kolla-Ansible** sobre **Ubuntu 20.04** y **OpenStack Bobcat**.
+Este documento describe el proceso completo de **bootstrap del entorno de despliegue de OpenStack** utilizando **Kolla-Ansible** sobre **Ubuntu 22.04** y **OpenStack Bobcat**.
 
 Este paso prepara el nodo de despliegue con todas las dependencias necesarias antes de ejecutar el deploy.
 
@@ -35,7 +35,7 @@ Este bootstrap contempla dos escenarios válidos para el nodo de despliegue:
 ## Alcance
 
 - Nodo de despliegue: `ctrl01`
-- OpenStack release: **Bobcat**
+- OpenStack release: **2025.2**
 - Base OS: **Ubuntu 22.04**
 - Método de despliegue: **Kolla-Ansible**
 
@@ -75,13 +75,14 @@ sudo apt install -y \
 ### Crear virtualenv
 
 ```bash
-python3 -m venv ~/kolla-venv
+rm -rf ~/kolla-venv19
+python3 -m venv ~/kolla-venv19
 ```
 
 ### Activar el entorno
 
 ```bash
-source ~/kolla-venv/bin/activate
+source ~/kolla-venv19/bin/activate
 ```
 
 📌 Todos los comandos de `kolla-ansible` se ejecutan dentro de este virtualenv.
@@ -93,19 +94,19 @@ source ~/kolla-venv/bin/activate
 ### Actualizar pip
 
 ```bash
-pip install --upgrade pip
+pip3 install --upgrade pip
 ```
 
 ### Instalar Ansible compatible
 
 ```bash
-pip install "ansible-core>=2.14,<2.16"
+pip install "ansible-core>=2.16,<2.17"
 ```
 
 ### Instalar Kolla-Ansible
 
 ```bash
-pip install kolla-ansible==17.*
+pip install kolla-ansible==19.*
 ```
 
 ### Verificación
@@ -252,7 +253,7 @@ Resultado esperado:
 
 ```text
 kolla_base_distro: ubuntu
-openstack_release: bobcat
+openstack_release: 2025.2
 ```
 
 ---
@@ -294,7 +295,7 @@ Este paso valida:
 Ejecución:
 
 ```bash
-kolla-ansible -i ansible/openstack/inventory/hosts.ini prechecks
+kolla-ansible prechecks -i ansible/openstack/inventory/hosts.ini
 ```
 
 Resultado esperado:
