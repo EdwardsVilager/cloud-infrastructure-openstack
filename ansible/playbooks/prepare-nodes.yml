@@ -18,7 +18,7 @@
     docker_packages:
       - docker.io
 
-    ntp_server: "50.50.1.20"  # ctrl01
+    ntp_server: "50.50.1.15"  # deploy01
 
   tasks:
 
@@ -161,3 +161,86 @@
         - name: Mostrar estado de la hora del sistema
           ansible.builtin.debug:
             msg: "{{ timedatectl_status.stdout_lines }}"
+
+# ------------------------------------------------------
+# Configuración Open vSwitch y irqbalance Nodos Compute
+# ------------------------------------------------------
+
+    - name: Preparar Open vSwitch en nodos compute
+      when: "'compute' in group_names"
+      become: true
+      block:
+
+        - name: Actualizar cache APT (una sola vez)
+          apt:
+            update_cache: yes
+            cache_valid_time: 3600
+
+        - name: Instalar Open vSwitch
+          apt:
+            name: openvswitch-switch
+            state: present
+
+        - name: Detener Open vSwitch si está activo
+          service:
+            name: openvswitch-switch
+            state: stopped
+          ignore_errors: true
+
+        - name: Verificar si existe la DB de Open vSwitch
+          stat:
+            path: /etc/openvswitch/conf.db
+          register: ovsdb_stat
+
+        - name: Eliminar lock huérfano de OVS (si existe)
+          file:
+            path: /etc/openvswitch/.conf.db.~lock~
+            state: absent
+          when: not ovsdb_stat.stat.exists
+
+        - name: Inicializar DB de Open vSwitch (solo si no existe)
+          command: ovsdb-tool create /etc/openvswitch/conf.db /usr/share/openvswitch/vswitch.ovsschema
+          when: not ovsdb_stat.stat.exists
+
+        # Directorios runtime requeridos por ovsdb-server
+        - name: Asegurar directorios runtime de Open vSwitch
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          loop:
+            - /run/openvswitch
+            - /var/run/openvswitch
+
+        - name: Iniciar Open vSwitch con systemd
+          service:
+            name: openvswitch-switch
+            state: started
+            enabled: true
+
+        - name: Verificar que OVS esté operativo
+          command: ovs-vsctl show
+          register: ovs_status
+          changed_when: false
+
+        - name: Mostrar estado de Open vSwitch
+          debug:
+            msg: "{{ ovs_status.stdout_lines }}"
+
+    - name: Instalar y habilitar irqbalance en nodos compute
+      when: "'compute' in group_names"
+      become: true
+      block:
+
+        - name: Instalar irqbalance
+          apt:
+            name: irqbalance
+            state: present
+
+        - name: Habilitar y arrancar irqbalance
+          service:
+            name: irqbalance
+            state: started
+            enabled: true

@@ -157,5 +157,5 @@ mariadb_sst_port: 4444
 mariadb_cluster_name: "openstack"
 mariadb_sst_method: "mariabackup"
 enable_proxysql: true
-database_address: "{{ kolla_internal_vip_address }}"
+#database_address: "{{ kolla_internal_vip_address }}" hay q habilitarlo para ciertas tareas de BD??..
 database_port: 6032   # puerto de Proxysql

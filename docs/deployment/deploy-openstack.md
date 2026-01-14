@@ -56,6 +56,7 @@ Qué hace este comando
 
 ```bash
 kolla-ansible deploy -i ansible/openstack/inventory/hosts.ini --tags haproxy
+kolla-ansible deploy -i ansible/openstack/inventory/hosts.ini --skip-tags keystone
 kolla-ansible reconfigure -i ansible/openstack/inventory/hosts.ini
 ```
 
@@ -89,7 +90,7 @@ docker run -d --name kolla_toolbox \
   kolla/kolla-toolbox:2024.2-ubuntu-noble tail -f /dev/null
 ```
 
-> Esto solo es necesario si Kolla no logra levantarlo automáticamente.  
+> Esto solo es necesario si Kolla no logra levantarlo automáticamente.
 
 ### 3. Validar conectividad a MariaDB vía ProxySQL
 
@@ -110,6 +111,32 @@ docker exec -it mariadb mysql \
 kolla-ansible deploy -i ansible/openstack/inventory/hosts.ini --tags mariadb
 kolla-ansible mariadb-recovery -i ansible/openstack/inventory/hosts.ini
 ```
+
+---
+
+### 🔹 Si falla OVN Controller
+
+**Problema común:** La tarea `Create br-int bridge on OpenvSwitch` puede fallar si el contenedor `kolla_toolbox` **no está corriendo** en cada nodo de compute.
+
+**Solución:**
+
+### 1. Descargar  `kolla_toolbox` en nodo con VIP
+
+```bash
+docker pull kolla/kolla-toolbox:2024.2-ubuntu-noble
+```
+
+### 2. Verificar que `kolla_toolbox` se pueda levantar
+
+```bash
+docker run -d --name kolla_toolbox \
+  --network host \
+  -v /etc/kolla:/etc/kolla \
+  -v /var/log/kolla:/var/log/kolla \
+  kolla/kolla-toolbox:2024.2-ubuntu-noble tail -f /dev/null
+```
+
+> Esto solo es necesario si Kolla no logra levantarlo automáticamente.
 
 ---
 
