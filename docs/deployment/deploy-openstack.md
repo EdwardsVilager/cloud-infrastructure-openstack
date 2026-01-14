@@ -129,11 +129,19 @@ docker pull kolla/kolla-toolbox:2024.2-ubuntu-noble
 ### 2. Verificar que `kolla_toolbox` se pueda levantar
 
 ```bash
+docker rm -f kolla_toolbox
 docker run -d --name kolla_toolbox \
   --network host \
+  --privileged \
+  --security-opt apparmor=unconfined \
+  --pid=host \
+  -u $(id -u):$(id -g) \
   -v /etc/kolla:/etc/kolla \
   -v /var/log/kolla:/var/log/kolla \
-  kolla/kolla-toolbox:2024.2-ubuntu-noble tail -f /dev/null
+  -v /run/openvswitch:/run/openvswitch:shared \
+  -v /var/run/openvswitch:/var/run/openvswitch:shared \
+  kolla/kolla-toolbox:2024.2-ubuntu-noble \
+  tail -f /dev/null
 ```
 
 > Esto solo es necesario si Kolla no logra levantarlo automáticamente.

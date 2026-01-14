@@ -62,12 +62,18 @@ enable_neutron_provider_networks: true
 
 neutron_plugin_agent: "ovn"
 
-enable_openvswitch: false
+enable_openvswitch: true
 enable_ovn: true
 neutron_enable_ovn_agent: true
 
 neutron_ovn_distributed_fip: true
 
+enable_ovn_controller: true
+
+ovn_controller_network:
+  network_interface: "eth0"
+  bridge: "br-ctlplane"
+  mtu: 1500
 
 # ------------------------------------------------
 # CORE SERVICES
@@ -135,7 +141,7 @@ enable_neutron_metering: false
 # MESSAGING (RABBITMQ)
 # ------------------------------------------------
 enable_rabbitmq: true
-rabbitmq_cluster_cookie: "YOUR_SECRET_COOKIE"  # Puedes usar cualquier string
+rabbitmq_cluster_cookie: "MiCookieSuperSecreta2026"
 
 # ------------------------------------------------
 # Memcached (opcional para Keystone y otros)
@@ -157,5 +163,5 @@ mariadb_sst_port: 4444
 mariadb_cluster_name: "openstack"
 mariadb_sst_method: "mariabackup"
 enable_proxysql: true
-#database_address: "{{ kolla_internal_vip_address }}" hay q habilitarlo para ciertas tareas de BD??..
-database_port: 6032   # puerto de Proxysql
+#database_address: "{{ kolla_internal_vip_address }}"
+#database_port: 6032   # puerto de Proxysql
