@@ -157,6 +157,157 @@ cloud-infrastructure-openstack
        └── GitOps bootstrap
 ```
 
+## 🧩 Componentes desplegados y roles (según globals.yml e inventory)
+
+Esta sección describe los componentes reales habilitados en el laboratorio OpenStack, su rol y cómo interactúan entre sí.
+La instalación se realiza usando Kolla-Ansible con servicios containerizados (Docker) y Neutron + OVN como backend de networking.
+
+🖥️ Nodos de la plataforma
+
+🔹 Deployment Node
+Rol: Orquestación y control del despliegue
+
+- Ejecuta `kolla-ansible`
+- Contiene:
+  - Inventario (`hosts.ini`)
+  - `globals.yml`
+  - Playbooks de despliegue y validación
+- No ejecuta servicios OpenStack productivos
+
+👉 Es el punto de control de toda la infraestructura.
+
+🔹 Controller Nodes (ctrl01, ctrl02, ctrl03)
+Rol: Control plane y alta disponibilidad
+
+Servicios principales:
+
+- Keystone – Identidad y autenticación
+- Nova API / Scheduler / Conductor – Control de cómputo
+- Neutron Server – Control de redes
+- Glance API – Catálogo de imágenes
+- Placement API – Gestión de recursos
+- Horizon – Dashboard (opcional)
+
+Servicios de soporte (HA):
+
+- HAProxy – Balanceo de carga
+- Keepalived – VIP
+- MariaDB / Galera – Base de datos
+- RabbitMQ – Mensajería
+- Memcached – Cache
+- ProxySQL – Abstracción de acceso a DB
+
+Servicios OVN:
+
+- ovn-northd
+- OVN Northbound DB
+- OVN Southbound DB
+
+👉 Los controllers no ejecutan VMs, solo controlan el estado del cloud.
+
+🔹 Compute Nodes (cmp01, cmp02, …)
+Rol: Ejecución de cargas de trabajo (VMs)
+
+Servicios:
+
+- nova-compute
+- OVN Controller
+- Open vSwitch (OVS)
+
+Características del laboratorio:
+
+- VMs sobre un hypervisor sin virtualización anidada
+- Se utiliza:
+  - `veth` + `Open vSwitch`
+  - `ovs-dpdk = false`
+
+👉 Esto es válido para laboratorio y pruebas funcionales, no para performance real.
+
+---
+
+🌐 Networking – Neutron con OVN
+
+Modelo de red:
+
+- Neutron + OVN (Open Virtual Network)
+- No se usan:
+  - Linux Bridge
+  - Open vSwitch agent clásico
+
+Componentes clave:
+
+- Neutron Server
+- OVN Northbound DB
+  - Define redes lógicas (switches, routers)
+- OVN Southbound DB
+  - Estado real aplicado en los nodos
+- OVN Controller (en computes)
+  - Programa flujos en OVS
+- neutron-ovn-metadata-agent
+  - Provee metadata (cloud-init) a las VMs
+
+Flujo simplificado:
+
+```text
+Neutron API
+   ↓
+OVN Northbound DB
+   ↓
+ovn-northd
+   ↓
+OVN Southbound DB
+   ↓
+OVN Controller (Compute)
+   ↓
+Open vSwitch → VM
+```
+
+🧩 Rol del neutron-ovn-metadata-agent
+
+- Permite que las VMs accedan a:
+  - `http://169.254.169.254`
+
+- Provee:
+  - hostname
+  - user-data
+  - SSH keys
+  - cloud-init
+
+👉 Sin este agente:
+
+- Las VMs arrancan
+- Pero cloud-init falla
+- No se inyectan llaves ni configuración inicial
+
+🔁 Interacción entre componentes (visión lógica)
+
+```text
+Usuario / API / Horizon
+          │
+       HAProxy (VIP)
+          │
+ ┌────────┴────────┐
+ │   Controllers   │
+ │  (API + Control)│
+ └────────┬────────┘
+          │
+   DB (Galera) + MQ
+          │
+     Neutron + OVN
+          │
+ ┌────────┴────────┐
+ │    Computes     │
+ │ nova-compute    │
+ │ OVN Controller  │
+ └────────┬────────┘
+          │
+        Open vSwitch
+          │
+         VMs
+```
+
+---
+
 ## 📌 Regla clave
 
 Este repositorio no depende de Kubernetes.

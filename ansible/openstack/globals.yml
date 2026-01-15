@@ -13,10 +13,10 @@
 # ------------------------------------------------
 # CONTAINER RUNTIME
 # ------------------------------------------------
-docker_registry: "quay.io"
-docker_namespace: "openstack.kolla"
-#docker_registry: ""
-#docker_namespace: "kolla"
+#docker_registry: "quay.io"
+#docker_namespace: "openstack.kolla"
+docker_registry: ""
+docker_namespace: "kolla"
 
 kolla_base_distro: "ubuntu"
 kolla_install_type: "binary" # Puede ser "source" para código fuente
@@ -58,7 +58,6 @@ haproxy_enabled_services:
 network_interface: "eth0"
 tunnel_interface: "eth0"
 neutron_external_interface: "eth0"
-
 enable_neutron_provider_networks: true
 
 # ------------------------------------------------
@@ -70,6 +69,10 @@ enable_ovn: true
 neutron_enable_ovn_agent: true
 neutron_ovn_distributed_fip: true
 enable_ovn_controller: true
+
+# OVN LAB settings
+ovn_use_veth: true        # usar veth en lugar de aceleración por hardware
+ovs_dpdk_enabled: false   # deshabilitar DPDK para laboratorio
 
 ovn_controller_network:
   network_interface: "eth0"
@@ -119,7 +122,8 @@ enable_fluentd: false
 # ------------------------------------------------
 # NOVA (LAB CONFIG)
 # ------------------------------------------------
-nova_compute_virt_type: "kvm"
+#nova_compute_virt_type: "kvm"
+nova_compute_virt_type: "qemu"  # usar qemu para laboratorio sin VT-x
 
 # Deshabilitar proxies y serial para laboratorio
 enable_nova_novncproxy: false
