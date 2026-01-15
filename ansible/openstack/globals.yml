@@ -1,7 +1,8 @@
 # -------------------------------------------------------------------
 # Kolla-Ansible global configuration
 # Cloud Infrastructure – OpenStack (LAB)
-# Ubuntu 20.04 | OpenStack Bobcat (2023.2)
+# Ubuntu 20.04 LTS focal | OpenStack Bobcat (2023.2)
+# Ubuntu 22.04 LTS jammy | OpenStack Coyote (2024.2)
 # Single NIC per node
 # -------------------------------------------------------------------
 
@@ -9,17 +10,23 @@
 # BASE
 # ------------------------------------------------
 
-kolla_base_distro: "ubuntu"
-kolla_install_type: "binary"
-#kolla_install_type: "source" ##Desde codigo fuente
+# ------------------------------------------------
+# CONTAINER RUNTIME
+# ------------------------------------------------
+docker_registry: "quay.io"
+docker_namespace: "openstack.kolla"
+#docker_registry: ""
+#docker_namespace: "kolla"
 
+kolla_base_distro: "ubuntu"
+kolla_install_type: "binary" # Puede ser "source" para código fuente
 openstack_release: "2024.2"
-#openstack_release: "2023.2"
+openstack_tag: "2024.2-ubuntu-noble"
 kolla_tag: "2024.2-ubuntu-noble"
 kolla_ansible_branch: stable/2024.2
-#kolla_ansible_branch: unmaintained/2024.1
 
-# Contenedor engine: docker o podman Tools
+
+# Contenedor engine: docker o podman
 kolla_container_engine: "docker"
 
 # ------------------------------------------------
@@ -34,7 +41,6 @@ enable_keepalived: true
 kolla_enable_haproxy: true
 
 # Servicios que HAProxy debe exponer
-
 haproxy_enabled_services:
   - keystone
   - glance-api
@@ -45,7 +51,6 @@ haproxy_enabled_services:
   - cinder-scheduler
   - neutron-server          # opcional si quieres HA para Neutron
   - placement-api           # opcional si quieres HA para Placement
-
 
 # ------------------------------------------------
 # NETWORKING (Single NIC LAB)
@@ -59,21 +64,18 @@ enable_neutron_provider_networks: true
 # ------------------------------------------------
 # NEUTRON / OVN
 # ------------------------------------------------
-
 neutron_plugin_agent: "ovn"
-
 enable_openvswitch: true
 enable_ovn: true
 neutron_enable_ovn_agent: true
-
 neutron_ovn_distributed_fip: true
-
 enable_ovn_controller: true
 
 ovn_controller_network:
   network_interface: "eth0"
   bridge: "br-ctlplane"
   mtu: 1500
+
 
 # ------------------------------------------------
 # CORE SERVICES
@@ -102,12 +104,6 @@ enable_heat: false
 enable_barbican: false
 enable_swift: false
 enable_octavia: false
-
-# ------------------------------------------------
-# CONTAINER RUNTIME
-# ------------------------------------------------
-docker_registry: ""
-docker_namespace: "kolla"
 
 # ------------------------------------------------
 # SECURITY (LAB)
@@ -141,7 +137,22 @@ enable_neutron_metering: false
 # MESSAGING (RABBITMQ)
 # ------------------------------------------------
 enable_rabbitmq: true
-rabbitmq_cluster_cookie: "MiCookieSuperSecreta2026"
+enable_rabbitmq_cluster: true
+rabbitmq_user: openstack
+rabbitmq_cluster_cookie: "hXhYB1jRKj27ea8hNkGVGmTPq7qDUMxcZSSeI4Oo" # Obtener de /etc/kolla/passwords.yml in variable rabbitmq_cluster_cookie"
+rabbitmq_virtual_hosts:
+  - /
+  - /nova
+
+rabbitmq_policies:
+  - name: ha-all
+    pattern: ".*"
+    definition:
+      ha-mode: all
+      ha-sync-mode: automatic
+
+# Management UI
+enable_rabbitmq_management: true
 
 # ------------------------------------------------
 # Memcached (opcional para Keystone y otros)
