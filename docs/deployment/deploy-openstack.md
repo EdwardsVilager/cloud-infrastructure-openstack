@@ -99,7 +99,7 @@ docker run -d --name kolla_toolbox \
   -v /var/log/kolla:/var/log/kolla \
   -v /tmp/.erlang.cookie:/var/lib/rabbitmq/.erlang.cookie \
   --user root \
-  kolla/kolla-toolbox:2024.2-ubuntu-noble \
+  harbor.infra.local/kolla/openstack.kolla/kolla-toolbox:2024.2-rocky-9 \
   tail -f /dev/null
 
 docker exec kolla_toolbox chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
@@ -155,7 +155,7 @@ docker run -d --name kolla_toolbox \
   -v /var/log/kolla:/var/log/kolla \
   -v /run/openvswitch:/run/openvswitch:shared \
   -v /var/run/openvswitch:/var/run/openvswitch:shared \
-  kolla/kolla-toolbox:2024.2-ubuntu-noble \
+  harbor.infra.local/kolla/openstack.kolla/kolla-toolbox:2024.2-rocky-9 \
   tail -f /dev/null
 ```
 
@@ -301,11 +301,32 @@ Resutado esperado:
 /root/.local/bin/openstack volume service list
 ```
 
+Resutado esperado:
+
+```text
+internalURL endpoint for block-storage service in RegionOne region not found
+```
+
+> No esta activado Cinder
+
 ### 🔹 Lista los agentes de red
 
 ```bash
 /root/.local/bin/openstack network agent list
 ```
+
+Resutado esperado:
+
+```text
++--------------------------------------+------------------------------+-------+-------------------+-------+-------+----------------+
+| ID                                   | Agent Type                   | Host  | Availability Zone | Alive | State | Binary         |
++--------------------------------------+------------------------------+-------+-------------------+-------+-------+----------------+
+| afa28615-b0ce-43c4-aaee-feef327e9987 | OVN Controller Gateway agent | cmp-1 |                   | :-)   | UP    | ovn-controller |
+| ed167c8a-3992-446b-85c7-b037fec4d954 | OVN Controller Gateway agent | cmp-2 |                   | :-)   | UP    | ovn-controller |
++--------------------------------------+------------------------------+-------+-------------------+-------+-------+----------------+
+```
+
+> Falta mas servicios de red (parcial funcionando)
 
 ### 🔹 Contenedores corriendo
 

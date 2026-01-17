@@ -244,3 +244,8 @@
             name: irqbalance
             state: started
             enabled: true
+
+        - name: Instalar ovn-common
+          apt:
+            name: ovn-common
+            state: present
